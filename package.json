@@ -1,0 +1,19 @@
+{
+  "name": "the-last-buyer-simulator",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "private": true,
+  "scripts": {
+    "sim": "ts-node src/simulator.ts",
+    "watch": "ts-node src/watch.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.6.2"
+  }
+}

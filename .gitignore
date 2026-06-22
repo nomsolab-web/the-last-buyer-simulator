@@ -1,0 +1,6 @@
+﻿node_modules/
+data/
+*.log
+public/dashboard-data.js
+.env
+.env.*

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Last Buyer Simulator</title>
+  <style>
+    :root { color-scheme: dark; --bg:#101215; --panel:#181b20; --line:#313842; --text:#eef2f6; --muted:#9da8b5; --good:#33d17a; --bad:#ff6b6b; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:0; }
+    main { width:min(1320px, calc(100% - 32px)); margin:0 auto; padding:28px 0 40px; }
+    h1 { margin:0; font-size:34px; }
+    h2 { margin:0 0 12px; font-size:18px; }
+    .muted { color:var(--muted); }
+    .topbar { display:flex; justify-content:space-between; align-items:end; gap:16px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:18px; }
+    .metric, section { border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+    .metric { padding:12px; min-height:74px; }
+    .metric span { display:block; color:var(--muted); font-size:12px; margin-bottom:6px; }
+    .metric strong { display:block; font-size:21px; overflow-wrap:anywhere; }
+    section { padding:14px; margin-bottom:18px; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { border-top:1px solid var(--line); padding:9px 8px; text-align:left; vertical-align:top; }
+    th { color:var(--muted); font-weight:700; white-space:nowrap; }
+    .good { color:var(--good); font-weight:800; }
+    .bad { color:var(--bad); font-weight:800; }
+    .pill { display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:5px 9px; background:#15181d; color:var(--muted); font-size:12px; }
+    .reason { color:var(--muted); max-width:460px; overflow-wrap:anywhere; }
+    @media (max-width:760px) { main { width:min(100% - 20px, 1320px); padding-top:18px; } .topbar { align-items:flex-start; flex-direction:column; } h1 { font-size:27px; } th,td { padding:8px 6px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div><h1>The Last Buyer Simulator</h1><div class="muted" id="updatedAt">-</div></div>
+      <span class="pill">paper trading only</span>
+    </header>
+
+    <div class="grid" id="summary"></div>
+
+    <section><h2>Strategy Comparison</h2><table><thead><tr><th>Strategy</th><th>Trades</th><th>Open</th><th>Win Rate</th><th>Total Equity</th><th>Realized</th><th>Unrealized</th><th>Realistic PnL</th><th>Max DD</th><th>Best Trade</th><th>Worst Trade</th><th>Avg Hold</th><th>2x Hits</th><th>2x Rate</th><th>Avg 2x Time</th><th>Top Rejections</th></tr></thead><tbody id="strategyComparison"></tbody></table></section>
+    <section><h2>Strategy Open Positions</h2><table><thead><tr><th>Rule</th><th>Symbol</th><th>Buy SOL</th><th>Entry</th><th>Current</th><th>PnL</th><th>State</th></tr></thead><tbody id="strategyOpenPositions"></tbody></table></section>
+    <section><h2>Strategy Closed Trades</h2><table><thead><tr><th>Rule</th><th>Symbol</th><th>Sell Time</th><th>Sell SOL</th><th>Sell Price</th><th>PnL</th><th>Reason</th></tr></thead><tbody id="strategyClosedTrades"></tbody></table></section>
+    <section><h2>Strategy Buy History</h2><table><thead><tr><th>Rule</th><th>Symbol</th><th>Buy Time</th><th>Buy SOL</th><th>Buy Price</th><th>Discovery</th><th>Trash</th><th>State</th></tr></thead><tbody id="strategyBuyHistory"></tbody></table></section>    <section><h2>Open Positions</h2><table><thead><tr><th>Symbol</th><th>SOL</th><th>Entry</th><th>Current</th><th>PnL</th><th>State</th><th>Reason</th></tr></thead><tbody id="positions"></tbody></table></section>
+    <section><h2>Current Paper Buy Candidates</h2><table><thead><tr><th>Symbol</th><th>Discovery</th><th>Trash</th><th>Liquidity</th><th>State</th><th>Pre-Drain</th><th>Reasons</th></tr></thead><tbody id="candidates"></tbody></table></section>
+    <section><h2>Paper Buy Thresholds</h2><table><thead><tr><th>Rule</th><th>STRICT</th><th>BALANCED</th><th>AGGRESSIVE</th></tr></thead><tbody id="thresholds"></tbody></table></section>
+    <section><h2>Buy Rejection Summary</h2><table><thead><tr><th>Reason</th><th>Count</th></tr></thead><tbody id="rejectionSummary"></tbody></table></section>
+    <section><h2>Skipped Candidates with Reasons</h2><table><thead><tr><th>Symbol</th><th>Discovery</th><th>Trash</th><th>State</th><th>Reasons</th></tr></thead><tbody id="skipped"></tbody></table></section>
+    <section><h2>Exit Simulation Result</h2><table><thead><tr><th>Symbol</th><th>Rule</th><th>Exit</th><th>Exit Price</th><th>PnL</th></tr></thead><tbody id="exitSimulation"></tbody></table></section>
+    <section><h2>Accuracy Buckets</h2><table><thead><tr><th>Bucket</th><th>Samples</th><th>Win 1h</th><th>Win 6h</th><th>Win 24h</th><th>Median 24h</th><th>Max Drawdown</th></tr></thead><tbody id="accuracy"></tbody></table></section>
+    <section><h2>Trade History</h2><table><thead><tr><th>Time</th><th>Side</th><th>Symbol</th><th>SOL</th><th>Price</th><th>Reason</th><th>PnL</th></tr></thead><tbody id="trades"></tbody></table></section>
+  </main>
+  <script src="dashboard-data.js"></script>
+  <script>
+    const fmt = (n, d = 4) => Number.isFinite(Number(n)) ? Number(n).toFixed(d) : '-';
+    const pct = (n, d = 2) => Number.isFinite(Number(n)) ? `${Number(n).toFixed(d)}%` : '-';
+    const money = (n) => Number.isFinite(Number(n)) ? `$${Number(n).toPrecision(6)}` : '-';
+    const cls = (n) => Number(n) > 0 ? 'good' : Number(n) < 0 ? 'bad' : '';
+    const esc = (value) => String(value ?? '-').replace(/[&<>"]/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[ch]));
+    const row = (cells) => `<tr>${cells.map((cell) => `<td>${cell}</td>`).join('')}</tr>`;
+    const tableFallback = (colspan) => `<tr><td colspan="${colspan}" class="muted">No data</td></tr>`;
+    const topRejections = (summary) => Object.entries(summary || {}).sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, 3).map(([reason, count]) => `${reason}:${count}`).join(' | ') || '-';
+    const tradeLabel = (t) => t ? `${esc(t.symbol)} ${pct(t.pnlPct)}` : '-';
+    const holdLabel = (m) => Number.isFinite(Number(m)) ? `${Number(m).toFixed(1)}m` : '-';
+    function load() {
+      const data = window.__SIMULATOR_DASHBOARD__ || {};
+      const portfolio = data.portfolio || null;
+      const trades = data.trades || [];
+      const perf = data.performance || null;
+      const simLog = data.simLog || [];
+      const exitSim = data.exitSimulation || [];
+      const buyReject = data.buyReject || null;
+      const strategyPerf = data.strategyPerf || null;
+      const report = data.report || {};
+      const accuracy = data.accuracy || null;
+      const openPositions = portfolio?.openPositions || [];
+      const paperCandidates = (report.candidates || []).filter((c) => c && c.paperBuyCandidate);
+      const latestLog = simLog[simLog.length - 1] || { skipped: [] };
+      const rejected = Array.isArray(buyReject?.candidates) ? buyReject.candidates : [];
+      const strategyRows = Array.isArray(strategyPerf?.strategies) ? strategyPerf.strategies : [];
+      const strategyState = data.strategyState || {};
+      const strategyNames = ['STRICT', 'BALANCED', 'AGGRESSIVE', 'DEGEN', 'ULTRA_DEGEN', 'GAMBLER_2X'];
+      document.getElementById('updatedAt').textContent = strategyPerf?.updatedAt || portfolio?.updatedAt || perf?.updatedAt || buyReject?.updatedAt || data.generatedAt || '-';
+      document.getElementById('summary').innerHTML = [
+        ['Cash SOL', fmt(portfolio?.cashSol)], ['Total Equity', fmt(portfolio?.totalEquitySol)], ['Realized PnL', fmt(perf?.realizedPnlSol)], ['Unrealized PnL', fmt(perf?.unrealizedPnlSol)], ['Win Rate', pct(perf?.winRate)], ['Max Drawdown', pct(perf?.maxDrawdownPct)], ['Open Positions', openPositions.length], ['Closed Trades', perf?.closedTrades ?? 0], ['Paper Buy Now', buyReject?.paperBuyCandidates ?? paperCandidates.length], ['Rejected Now', rejected.filter((c) => (c.rejectionReasons || []).length > 0).length || latestLog.skipped?.length || 0]
+      ].map(([k,v]) => `<div class="metric"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
+      document.getElementById('strategyComparison').innerHTML = strategyRows.map((s) => row([esc(s.name), esc(s.tradeCount ?? s.closedTrades ?? 0), esc(s.openPositions), pct(s.winRate), fmt(s.totalEquitySol), fmt(s.realizedPnlSol), fmt(s.unrealizedPnlSol), fmt(s.realisticPnlSol), pct(s.maxDrawdown), `<span class="${cls(s.bestTrade?.pnlSol)}">${tradeLabel(s.bestTrade)}</span>`, `<span class="${cls(s.worstTrade?.pnlSol)}">${tradeLabel(s.worstTrade)}</span>`, holdLabel(s.averageHoldMinutes), esc(s.hit2xCount ?? 0), pct(s.hit2xRate), holdLabel(s.avgTimeTo2xMinutes), `<span class="reason">${esc(topRejections(s.rejectionSummary))}</span>`])).join('') || tableFallback(16);
+            const strategyOpenRows = strategyNames.flatMap((name) => (strategyState[name]?.portfolio?.openPositions || []).map((p) => ({ name, ...p })));
+      document.getElementById('strategyOpenPositions').innerHTML = strategyOpenRows.map((p) => row([esc(p.name), esc(p.symbol), fmt(p.solAmount), money(p.entryPriceUsd), money(p.currentPriceUsd), `<span class="${cls(p.unrealizedPnlSol)}">${pct(p.unrealizedPnlPct)} / ${fmt(p.unrealizedPnlSol)} SOL</span>`, esc(p.lifecycleState)])).join('') || tableFallback(7);
+      const strategyClosedRows = strategyNames.flatMap((name) => (strategyState[name]?.trades || []).filter((t) => t.side === 'SELL').map((t) => ({ name, ...t })));
+      document.getElementById('strategyClosedTrades').innerHTML = strategyClosedRows.slice(-80).reverse().map((t) => row([esc(t.name), esc(t.symbol), esc(t.timestamp), fmt(t.solAmount), money(t.priceUsd), `<span class="${cls(t.pnlSol)}">${pct(t.pnlPct)} / ${fmt(t.pnlSol)} SOL</span>`, esc(t.reason)])).join('') || tableFallback(7);
+      const strategyBuyRows = strategyNames.flatMap((name) => (strategyState[name]?.trades || []).filter((t) => t.side === 'BUY').map((t) => ({ name, ...t })));
+      document.getElementById('strategyBuyHistory').innerHTML = strategyBuyRows.slice(-80).reverse().map((t) => row([esc(t.name), esc(t.symbol), esc(t.timestamp), fmt(t.solAmount), money(t.priceUsd), esc(t.discoveryScore), esc(t.trashScore), esc(t.lifecycleState)])).join('') || tableFallback(8);
+      document.getElementById('positions').innerHTML = openPositions.map((p) => row([esc(p.symbol), fmt(p.solAmount), money(p.entryPriceUsd), money(p.currentPriceUsd), `<span class="${cls(p.unrealizedPnlSol)}">${pct(p.unrealizedPnlPct)} / ${fmt(p.unrealizedPnlSol)} SOL</span>`, esc(p.lifecycleState), esc(p.reason)])).join('') || tableFallback(7);
+      document.getElementById('candidates').innerHTML = paperCandidates.slice(0, 30).map((c) => row([esc(c.symbol), esc(c.discoveryScore), esc(c.trashScore), esc(c.liquidityUsd), esc(c.lifecycleState || c.state), esc(c.preDrainLevel), `<span class="reason">${esc((c.paperBuyReason || []).join(' | '))}</span>`])).join('') || tableFallback(7);
+      document.getElementById('thresholds').innerHTML = [['Discovery Score', '>= 85', '>= 75', '>= 65'], ['Trash Score', '<= 30', '<= 45', '<= 60'], ['Liquidity USD', '>= $30,000', '>= $20,000', '>= $10,000'], ['Top10 Holder Rate', '<= 40%', '<= 50%', '<= 60%'], ['Extra Strategies', 'DEGEN: rank<=50 / 0.25 SOL', 'ULTRA: rank<=30 / 0.10 SOL', 'GAMBLER: rank<=40 / 2x or 24h']].map((item) => row(item.map(esc))).join('');
+      const summaryEntries = Object.entries(buyReject?.rejectionSummary || {}).sort((a, b) => Number(b[1]) - Number(a[1]));
+      document.getElementById('rejectionSummary').innerHTML = summaryEntries.map(([reason, count]) => row([esc(reason), esc(count)])).join('') || tableFallback(2);
+      const skippedRows = rejected.length ? rejected.filter((s) => (s.rejectionReasons || []).length > 0) : (latestLog.skipped || []);
+      document.getElementById('skipped').innerHTML = skippedRows.slice(0, 50).map((s) => row([esc(s.symbol), esc(s.discoveryScore), esc(s.trashScore), esc(s.lifecycleState), `<span class="reason">${esc((s.rejectionReasons || s.reasons || []).join(' | '))}</span>`])).join('') || tableFallback(5);
+      document.getElementById('exitSimulation').innerHTML = (exitSim || []).filter((x) => x.exitTime).slice(0, 50).map((x) => row([esc(x.symbol), esc(x.rule), esc(x.exitTime), money(x.exitPriceUsd), `<span class="${cls(x.pnlSol)}">${pct(x.pnlPct)} / ${fmt(x.pnlSol)} SOL</span>`])).join('') || tableFallback(5);
+      const buckets = Array.isArray(accuracy?.buckets) ? accuracy.buckets : [];
+      document.getElementById('accuracy').innerHTML = buckets.map((b) => row([esc(b.name), esc(b.sampleCount ?? b.count), pct(b.winRate1h), pct(b.winRate6h), pct(b.winRate24h), pct(b.medianReturn24h ?? b.medianReturn24hPct), pct(b.maxDrawdown24h ?? b.avgMaxDrawdown24hPct)])).join('') || tableFallback(7);
+      document.getElementById('trades').innerHTML = trades.slice(-30).reverse().map((t) => row([esc(t.timestamp), `<span class="${t.side === 'BUY' ? 'good' : 'bad'}">${esc(t.side)}</span>`, esc(t.symbol), fmt(t.solAmount), money(t.priceUsd), esc(t.reason), t.pnlSol === null ? '-' : `<span class="${cls(t.pnlSol)}">${pct(t.pnlPct)} / ${fmt(t.pnlSol)} SOL</span>`])).join('') || tableFallback(7);
+    }
+    load();
+  </script>
+</body>
+</html>

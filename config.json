@@ -1,0 +1,10 @@
+{
+    "dataSource":  "D:/last-buyer-data/latest-report.json",
+    "initialCashSol":  10,
+    "positionSizeSol":  0.5,
+    "updateIntervalSeconds":  180,
+    "cooldownMinutes":  30,
+    "buyFeePct":  0.5,
+    "sellFeePct":  0.5,
+    "slippagePct":  2
+}
