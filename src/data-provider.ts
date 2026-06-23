@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+﻿import fs from 'fs/promises';
 import path from 'path';
 import { Candidate, LastBuyerReport, SimulatorConfig } from './types';
 
@@ -70,6 +70,7 @@ function normalizeCandidate(value: unknown): Candidate | null {
     candidateSource: typeof value.candidateSource === 'string' ? value.candidateSource : typeof value.source === 'string' ? value.source : null,
     honeypotFree: toBoolOrNull(value.honeypotFree ?? value.isHoneypotFree),
     priceChange1h: firstNumber(value.priceChange1h, value.priceChange1hPct, value.change1h, nestedNumber(value.priceChange, '1h')),
+    volume1h: firstNumber(value.volume1h, value.volume1hUsd, value.volumeUsd1h),
     volume24h: firstNumber(value.volume24h, value.volume24hUsd, value.volume, value.volumeUsd24h),
     marketPhase: typeof value.marketPhase === 'string' ? value.marketPhase : null,
     pnlTrustLevel: isRecord(value.pnlTrust) && typeof value.pnlTrust.level === 'string' ? value.pnlTrust.level : null,
@@ -123,4 +124,5 @@ export async function loadReportCandidates(configPath = DEFAULT_CONFIG_PATH): Pr
     .map(normalizeCandidate)
     .filter((candidate): candidate is Candidate => candidate !== null);
 }
+
 

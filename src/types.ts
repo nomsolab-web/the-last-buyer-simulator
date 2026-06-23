@@ -38,6 +38,7 @@ export interface Candidate {
   candidateSource?: string | null;
   honeypotFree?: boolean | null;
   priceChange1h?: number | null;
+  volume1h?: number | null;
   volume24h?: number | null;
   marketPhase?: string | null;
   pnlTrustLevel?: string | null;
@@ -45,9 +46,16 @@ export interface Candidate {
   devRiskScore?: number | null;
   devRiskLevel?: string | null;
   holderCount?: number | null;
+  holderDeltaPct?: number | null;
+  holderCountChange?: number | null;
+  liquidityUsdDeltaPct?: number | null;
+  lpRetentionRate24h?: number | null;
   bundlerRate?: number | null;
   sniperCount?: number | null;
   smartWalletSignal?: string | null;
+  smartWalletFirstEntryCountChange?: number | null;
+  smartWalletNetFlow1h?: number | null;
+  top10HolderRateDelta?: number | null;
 }
 
 export interface LastBuyerReport {
@@ -94,6 +102,8 @@ export interface PaperPosition {
   entrySniperCount?: number | null;
 }
 
+export type Position = PaperPosition;
+
 export interface Portfolio {
   cashSol: number;
   openPositions: PaperPosition[];
@@ -101,6 +111,22 @@ export interface Portfolio {
   unrealizedPnlSol: number;
   totalEquitySol: number;
   updatedAt: string;
+}
+
+export interface SellDecision {
+  shouldSell: boolean;
+  reason?: string;
+}
+
+export interface Strategy {
+  name: string;
+  shouldBuy(candidate: Candidate, portfolio: Portfolio): boolean;
+  shouldSell(position: Position, candidate: Candidate): SellDecision;
+  explainBuy?(candidate: Candidate, portfolio: Portfolio): string[];
+  config: {
+    positionSizeSol: number;
+    maxOpenPositions: number;
+  };
 }
 
 export interface Trade {
@@ -147,10 +173,12 @@ export interface PerformanceReport {
   unrealizedPnlSol: number;
   totalEquitySol: number;
   maxDrawdownPct: number;
-  bestTrade: Trade | null;
-  worstTrade: Trade | null;
+  profitFactor: number | null;
   averageWinPct: number | null;
   averageLossPct: number | null;
+  averageHoldMinutes: number | null;
+  bestTrade: Trade | null;
+  worstTrade: Trade | null;
 }
 
 export interface ExitSimulationEntry {
@@ -198,37 +226,13 @@ export interface BuyRejectionReport {
   candidates: BuyRejectionEntry[];
 }
 
-export type StrategyName = 'STRICT' | 'BALANCED' | 'AGGRESSIVE' | 'DEGEN' | 'ULTRA_DEGEN' | 'GAMBLER_2X';
-
-export interface StrategyRuleSet {
-  name: StrategyName;
-  discoveryMin: number;
-  trashMax: number;
-  liquidityMinUsd: number;
-  top10MaxPct?: number;
-  sourceRankMax?: number;
-  lifecycleStates: string[];
-  positionSizeSol?: number;
-  maxHoldHours?: number;
-  requirePositive1h?: boolean;
-  requireVolume?: boolean;
-  blockNoBuyReason?: boolean;
-  blockAlert?: boolean;
-  blockManipulation?: boolean;
-  manipulationSizeSol?: number;
-  sellMode: 'CURRENT' | 'GAMBLER_2X';
-  maxOpenPositions: number;
-}
-
 export interface StrategyStateEntry {
   portfolio: Portfolio;
   trades: Trade[];
-  oldPortfolio?: Portfolio;
-  oldTrades?: Trade[];
   cooldowns?: Record<string, string>;
 }
 
-export type StrategyState = Record<StrategyName, StrategyStateEntry>;
+export type StrategyState = Record<string, StrategyStateEntry>;
 
 export interface StrategyRuleResult {
   cashSol: number;
@@ -243,7 +247,7 @@ export interface StrategyRuleResult {
 }
 
 export interface StrategyPerformanceEntry {
-  name: StrategyName;
+  name: string;
   cashSol: number;
   openPositions: number;
   closedTrades: number;
@@ -254,10 +258,13 @@ export interface StrategyPerformanceEntry {
   realisticPnlSol: number;
   winRate: number;
   maxDrawdown: number;
+  profitFactor: number | null;
+  averageWinPct: number | null;
+  averageLossPct: number | null;
+  averageHoldMinutes: number | null;
   buyCount: number;
   bestTrade: Trade | null;
   worstTrade: Trade | null;
-  averageHoldMinutes: number | null;
   hit2xCount: number;
   hit2xRate: number;
   avgTimeTo2xMinutes: number | null;
@@ -271,6 +278,21 @@ export interface StrategyPerformanceEntry {
 export interface StrategyPerformanceReport {
   updatedAt: string;
   strategies: StrategyPerformanceEntry[];
+}
+
+export interface StrategyLeagueEntry {
+  rank: number;
+  strategyName: string;
+  totalEquitySol: number;
+  realisticPnlSol: number;
+  tradeCount: number;
+  winRate: number;
+  profitFactor: number | null;
+}
+
+export interface StrategyLeagueReport {
+  updatedAt: string;
+  strategies: StrategyLeagueEntry[];
 }
 
 export interface AnalysisEntry {

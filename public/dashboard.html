@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -38,7 +38,8 @@
 
     <div class="grid" id="summary"></div>
 
-    <section><h2>Strategy Comparison</h2><table><thead><tr><th>Strategy</th><th>Trades</th><th>Open</th><th>Win Rate</th><th>Total Equity</th><th>Realized</th><th>Unrealized</th><th>Realistic PnL</th><th>Max DD</th><th>Best Trade</th><th>Worst Trade</th><th>Avg Hold</th><th>2x Hits</th><th>2x Rate</th><th>Avg 2x Time</th><th>Top Rejections</th></tr></thead><tbody id="strategyComparison"></tbody></table></section>
+    <section><h2>Strategy Comparison</h2><table><thead><tr><th>Strategy</th><th>Trades</th><th>Open</th><th>Win Rate</th><th>Profit Factor</th><th>Avg Win</th><th>Avg Loss</th><th>Total Equity</th><th>Realistic PnL</th><th>Max DD</th><th>Avg Hold</th><th>2x Hits</th><th>2x Rate</th><th>Top Rejections</th></tr></thead><tbody id="strategyComparison"></tbody></table></section>
+    <section><h2>Strategy League</h2><table><thead><tr><th>Rank</th><th>Strategy</th><th>Total Equity</th><th>Realistic PnL</th><th>Trade Count</th><th>Win Rate</th><th>Profit Factor</th></tr></thead><tbody id="strategyLeague"></tbody></table></section>
     <section><h2>Moonshot Analysis</h2><div class="grid" id="moonshotSummary"></div><table><thead><tr><th>Lifecycle</th><th>Count</th></tr></thead><tbody id="moonshotLifecycle"></tbody></table></section>
     <section><h2>Winner / Loser Analysis</h2><div class="grid" id="winnerLoserSummary"></div><table><thead><tr><th>Type</th><th>Symbol</th><th>Entry</th><th>Discovery</th><th>Trash</th><th>Liquidity</th><th>Rank</th><th>Time To 2x</th><th>Max Gain</th></tr></thead><tbody id="winnerLoserRows"></tbody></table></section>
     <section><h2>Strategy Open Positions</h2><table><thead><tr><th>Rule</th><th>Symbol</th><th>Buy SOL</th><th>Entry</th><th>Current</th><th>PnL</th><th>State</th></tr></thead><tbody id="strategyOpenPositions"></tbody></table></section>
@@ -81,15 +82,17 @@
       const rejected = Array.isArray(buyReject?.candidates) ? buyReject.candidates : [];
       const strategyRows = Array.isArray(strategyPerf?.strategies) ? strategyPerf.strategies : [];
       const strategyState = data.strategyState || {};
+      const strategyLeague = data.strategyLeague || null;
       const moonshot = data.moonshotReport || null;
       const winners = Array.isArray(data.winnerAnalysis) ? data.winnerAnalysis : [];
       const losers = Array.isArray(data.loserAnalysis) ? data.loserAnalysis : [];
-      const strategyNames = ['STRICT', 'BALANCED', 'AGGRESSIVE', 'DEGEN', 'ULTRA_DEGEN', 'GAMBLER_2X'];
+      const strategyNames = strategyRows.length ? strategyRows.map((s) => s.name) : Object.keys(strategyState);
       document.getElementById('updatedAt').textContent = strategyPerf?.updatedAt || portfolio?.updatedAt || perf?.updatedAt || buyReject?.updatedAt || data.generatedAt || '-';
       document.getElementById('summary').innerHTML = [
         ['Cash SOL', fmt(portfolio?.cashSol)], ['Total Equity', fmt(portfolio?.totalEquitySol)], ['Realized PnL', fmt(perf?.realizedPnlSol)], ['Unrealized PnL', fmt(perf?.unrealizedPnlSol)], ['Win Rate', pct(perf?.winRate)], ['Max Drawdown', pct(perf?.maxDrawdownPct)], ['Open Positions', openPositions.length], ['Closed Trades', perf?.closedTrades ?? 0], ['Paper Buy Now', buyReject?.paperBuyCandidates ?? paperCandidates.length], ['Rejected Now', rejected.filter((c) => (c.rejectionReasons || []).length > 0).length || latestLog.skipped?.length || 0]
       ].map(([k,v]) => `<div class="metric"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
-      document.getElementById('strategyComparison').innerHTML = strategyRows.map((s) => row([esc(s.name), esc(s.tradeCount ?? s.closedTrades ?? 0), esc(s.openPositions), pct(s.winRate), fmt(s.totalEquitySol), fmt(s.realizedPnlSol), fmt(s.unrealizedPnlSol), fmt(s.realisticPnlSol), pct(s.maxDrawdown), `<span class="${cls(s.bestTrade?.pnlSol)}">${tradeLabel(s.bestTrade)}</span>`, `<span class="${cls(s.worstTrade?.pnlSol)}">${tradeLabel(s.worstTrade)}</span>`, holdLabel(s.averageHoldMinutes), esc(s.hit2xCount ?? 0), pct(s.hit2xRate), holdLabel(s.avgTimeTo2xMinutes), `<span class="reason">${esc(topRejections(s.rejectionSummary))}</span>`])).join('') || tableFallback(16);
+      document.getElementById('strategyComparison').innerHTML = strategyRows.map((s) => row([esc(s.name), esc(s.tradeCount ?? s.closedTrades ?? 0), esc(s.openPositions), pct(s.winRate), fmt(s.profitFactor, 2), pct(s.averageWinPct), pct(s.averageLossPct), fmt(s.totalEquitySol), fmt(s.realisticPnlSol), pct(s.maxDrawdown), holdLabel(s.averageHoldMinutes), esc(s.hit2xCount ?? 0), pct(s.hit2xRate), `<span class="reason">${esc(topRejections(s.rejectionSummary))}</span>`])).join('') || tableFallback(14);
+      document.getElementById('strategyLeague').innerHTML = (strategyLeague?.strategies || []).map((s) => row([esc(s.rank), esc(s.strategyName), fmt(s.totalEquitySol), `<span class="${cls(s.realisticPnlSol)}">${fmt(s.realisticPnlSol)}</span>`, esc(s.tradeCount), pct(s.winRate), fmt(s.profitFactor, 2)])).join('') || tableFallback(7);
       document.getElementById('moonshotSummary').innerHTML = [['Total 2x Hits', moonshot?.totalMoonshots ?? winners.length], ['Average Discovery', fmt(moonshot?.avgDiscovery, 2)], ['Average Trash', fmt(moonshot?.avgTrash, 2)], ['Average Liquidity', money(moonshot?.avgLiquidity)], ['Average Holder Momentum', pct((moonshot?.avgHolderMomentum ?? 0) * 100, 2)], ['Average Rank', fmt(moonshot?.avgSourceRank, 2)]].map(([k,v]) => `<div class="metric"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
       document.getElementById('moonshotLifecycle').innerHTML = Object.entries(moonshot?.lifecycleDistribution || {}).sort((a,b)=>Number(b[1])-Number(a[1])).map(([k,v])=>row([esc(k),esc(v)])).join('') || tableFallback(2);
       const bestWinner = winners[0] || null, worstLoser = losers[0] || null;
@@ -119,3 +122,4 @@
   </script>
 </body>
 </html>
+
