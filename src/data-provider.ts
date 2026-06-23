@@ -76,6 +76,10 @@ function normalizeCandidate(value: unknown): Candidate | null {
     dataHealthLevel: isRecord(value.dataHealth) && typeof value.dataHealth.level === 'string' ? value.dataHealth.level : null,
     devRiskScore: firstNumber(value.devRiskScore),
     devRiskLevel: typeof value.devRiskLevel === 'string' ? value.devRiskLevel : null,
+    holderCount: firstNumber(value.holderCount, value.holders),
+    bundlerRate: firstNumber(value.bundlerRate, value.bundler),
+    sniperCount: firstNumber(value.sniperCount, value.sniper),
+    smartWalletSignal: typeof value.smartWalletSignal === 'string' ? value.smartWalletSignal : null,
     warnings: Array.isArray(value.warnings) ? value.warnings.map(String) : [],
   };
 }

@@ -44,6 +44,10 @@ export interface Candidate {
   dataHealthLevel?: string | null;
   devRiskScore?: number | null;
   devRiskLevel?: string | null;
+  holderCount?: number | null;
+  bundlerRate?: number | null;
+  sniperCount?: number | null;
+  smartWalletSignal?: string | null;
 }
 
 export interface LastBuyerReport {
@@ -81,6 +85,13 @@ export interface PaperPosition {
   decliningStreak?: number;
   hit2xAt?: string | null;
   maxPnlPct?: number;
+  entryRank?: number | null;
+  entryLiquidity?: number | null;
+  entryTop10?: number | null;
+  entryHolderCount?: number | null;
+  entryHolderMomentum?: number | null;
+  entryBundlerRate?: number | null;
+  entrySniperCount?: number | null;
 }
 
 export interface Portfolio {
@@ -117,6 +128,14 @@ export interface Trade {
   holdMinutes?: number | null;
   hit2x?: boolean;
   timeTo2xMinutes?: number | null;
+  entryTime?: string | null;
+  entryRank?: number | null;
+  entryLiquidity?: number | null;
+  entryTop10?: number | null;
+  entryHolderCount?: number | null;
+  entryHolderMomentum?: number | null;
+  entryBundlerRate?: number | null;
+  entrySniperCount?: number | null;
 }
 
 export interface PerformanceReport {
@@ -198,6 +217,7 @@ export interface StrategyRuleSet {
   blockManipulation?: boolean;
   manipulationSizeSol?: number;
   sellMode: 'CURRENT' | 'GAMBLER_2X';
+  maxOpenPositions: number;
 }
 
 export interface StrategyStateEntry {
@@ -251,6 +271,38 @@ export interface StrategyPerformanceEntry {
 export interface StrategyPerformanceReport {
   updatedAt: string;
   strategies: StrategyPerformanceEntry[];
+}
+
+export interface AnalysisEntry {
+  symbol: string;
+  address: string;
+  entryTime: string;
+  entryDiscovery: number | null;
+  entryTrash: number | null;
+  entryRank: number | null;
+  entryLiquidity: number | null;
+  entryTop10: number | null;
+  entryHolderCount: number | null;
+  entryHolderMomentum: number | null;
+  entryBundlerRate: number | null;
+  entrySniperCount: number | null;
+  entryLifecycle: string;
+  timeTo2xMinutes: number | null;
+  maxGainPct: number;
+}
+
+export interface MoonshotReport {
+  updatedAt: string;
+  totalMoonshots: number;
+  avgDiscovery: number | null;
+  avgTrash: number | null;
+  avgLiquidity: number | null;
+  avgHolderMomentum: number | null;
+  avgTop10: number | null;
+  avgBundlerRate: number | null;
+  avgSniperCount: number | null;
+  avgSourceRank: number | null;
+  lifecycleDistribution: Record<string, number>;
 }
 
 export interface SimulatorLogEntry {
