@@ -154,6 +154,10 @@ export interface Trade {
   holdMinutes?: number | null;
   hit2x?: boolean;
   timeTo2xMinutes?: number | null;
+  exitLiquidity?: number | null;
+  exitLiquidityToSellRatio?: number | null;
+  fillableExit?: boolean | null;
+  unfillableReason?: string | null;
   entryTime?: string | null;
   entryRank?: number | null;
   entryLiquidity?: number | null;
@@ -179,6 +183,7 @@ export interface PerformanceReport {
   averageHoldMinutes: number | null;
   bestTrade: Trade | null;
   worstTrade: Trade | null;
+  unfillableWins: number;
 }
 
 export interface ExitSimulationEntry {
@@ -272,6 +277,8 @@ export interface StrategyPerformanceEntry {
   newRuleResult: StrategyRuleResult;
   preventedEarlySellCount: number;
   cooldownBlockedBuyCount: number;
+  unfillableWins: number;
+  fillableWinRate: number;
   rejectionSummary: Record<string, number>;
 }
 
@@ -288,6 +295,7 @@ export interface StrategyLeagueEntry {
   tradeCount: number;
   winRate: number;
   profitFactor: number | null;
+  unfillableWins: number;
 }
 
 export interface StrategyLeagueReport {
@@ -311,6 +319,10 @@ export interface AnalysisEntry {
   entryLifecycle: string;
   timeTo2xMinutes: number | null;
   maxGainPct: number;
+  exitLiquidity: number | null;
+  exitLiquidityToSellRatio: number | null;
+  fillableWin: boolean | null;
+  unfillableReason: string | null;
 }
 
 export interface MoonshotReport {
