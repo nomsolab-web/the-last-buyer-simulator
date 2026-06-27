@@ -16,6 +16,35 @@ export function hoursHeld(position: PaperPosition): number {
   return (Date.now() - Date.parse(position.entryTime)) / 3600000;
 }
 
+export function antiStuckExit(position: PaperPosition, options: {
+  profitTakePct?: number;
+  maxHoldHours?: number;
+  staleProfitHours?: number;
+  staleProfitPct?: number;
+  staleFlatHours?: number;
+  staleFlatPct?: number;
+  trailingStartPct?: number;
+  trailingGivebackPct?: number;
+} = {}): SellDecision | null {
+  const current = n(position.unrealizedPnlPct);
+  const max = n(position.maxPnlPct, current);
+  const held = hoursHeld(position);
+  const profitTakePct = options.profitTakePct ?? 75;
+  const trailingStartPct = options.trailingStartPct ?? 50;
+  const trailingGivebackPct = options.trailingGivebackPct ?? 25;
+  const staleProfitHours = options.staleProfitHours ?? 3;
+  const staleProfitPct = options.staleProfitPct ?? 10;
+  const staleFlatHours = options.staleFlatHours ?? 6;
+  const staleFlatPct = options.staleFlatPct ?? 5;
+  const maxHoldHours = options.maxHoldHours ?? 12;
+
+  if (current >= profitTakePct) return { shouldSell: true, reason: `profit_lock_${profitTakePct}` };
+  if (max >= trailingStartPct && current <= max - trailingGivebackPct) return { shouldSell: true, reason: `trailing_giveback_${trailingGivebackPct}` };
+  if (held >= staleProfitHours && current >= staleProfitPct) return { shouldSell: true, reason: `stale_profit_${staleProfitHours}h` };
+  if (held >= staleFlatHours && current <= staleFlatPct) return { shouldSell: true, reason: `stale_flat_${staleFlatHours}h` };
+  if (held >= maxHoldHours) return { shouldSell: true, reason: `max_hold_${maxHoldHours}h` };
+  return null;
+}
 export function hardBlocked(candidate: Candidate, options: { allowManipulation?: boolean; allowArchived?: boolean; blockAlert?: boolean } = {}): boolean {
   if (candidate.rugDetected || candidate.liquidityDrainDetected || candidate.preDrainLevel === 'DRAIN') return true;
   if (candidate.honeypotFree === false) return true;
@@ -30,6 +59,8 @@ export function baseSell(position: PaperPosition, candidate: Candidate, takeProf
   if (candidate.lifecycleState === 'ARCHIVED') return { shouldSell: true, reason: 'archived' };
   if (candidate.preDrainLevel === 'DRAIN' || candidate.liquidityDrainDetected) return { shouldSell: true, reason: 'liquidity_drain' };
   if (candidate.rugDetected) return { shouldSell: true, reason: 'rug_detected' };
+  const stuck = antiStuckExit(position, { profitTakePct: takeProfitPct, maxHoldHours: 6, staleProfitHours: 2, trailingStartPct: 35, trailingGivebackPct: 18 });
+  if (stuck) return stuck;
   if (position.unrealizedPnlPct >= takeProfitPct) return { shouldSell: true, reason: 'take_profit' };
   if (position.unrealizedPnlPct <= stopLossPct) return { shouldSell: true, reason: 'stop_loss' };
   if (candidate.lifecycleState === 'DECLINING' && (position.decliningStreak || 0) >= 2) return { shouldSell: true, reason: 'declining_streak_2' };

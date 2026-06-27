@@ -1,5 +1,5 @@
-import { Candidate, PaperPosition, SellDecision, Strategy } from '../types';
-import { baseSell, hoursHeld, n } from './helpers';
+﻿import { Candidate, PaperPosition, SellDecision, Strategy } from '../types';
+import { antiStuckExit, baseSell, hoursHeld, n } from './helpers';
 
 export interface SellStrategy {
   name: string;
@@ -21,45 +21,16 @@ export const sellStrategies: SellStrategy[] = [
     },
   },
   {
-    name: 'TP100_SL40_24H',
-    shouldSell(position, candidate) {
-      const hard = hardExit(candidate);
-      if (hard) return hard;
-      if (position.unrealizedPnlPct >= 100) return { shouldSell: true, reason: 'take_profit_100' };
-      if (position.unrealizedPnlPct <= -40) return { shouldSell: true, reason: 'stop_loss_40' };
-      if (hoursHeld(position) >= 24) return { shouldSell: true, reason: 'max_hold_24h' };
-      return { shouldSell: false };
-    },
-  },
-  {
-    name: 'TP200_SL40',
-    shouldSell(position, candidate) {
-      const hard = hardExit(candidate);
-      if (hard) return hard;
-      if (position.unrealizedPnlPct >= 200) return { shouldSell: true, reason: 'take_profit_200' };
-      if (position.unrealizedPnlPct <= -40) return { shouldSell: true, reason: 'stop_loss_40' };
-      return { shouldSell: false };
-    },
-  },
-  {
-    name: 'TP500_SL50_72H',
-    shouldSell(position, candidate) {
-      const hard = hardExit(candidate);
-      if (hard) return hard;
-      if (position.unrealizedPnlPct >= 500) return { shouldSell: true, reason: 'take_profit_500' };
-      if (position.unrealizedPnlPct <= -50) return { shouldSell: true, reason: 'stop_loss_50' };
-      if (hoursHeld(position) >= 72) return { shouldSell: true, reason: 'max_hold_72h' };
-      return { shouldSell: false };
-    },
-  },
-  {
     name: 'MOMENTUM_EXIT',
     shouldSell(position, candidate) {
       const hard = hardExit(candidate);
       if (hard) return hard;
+      const stuck = antiStuckExit(position, { profitTakePct: 75, maxHoldHours: 6, staleProfitHours: 2, trailingStartPct: 35, trailingGivebackPct: 18 });
+      if (stuck) return stuck;
       if (position.unrealizedPnlPct >= 100) return { shouldSell: true, reason: 'take_profit_100' };
       if (position.unrealizedPnlPct <= -35) return { shouldSell: true, reason: 'stop_loss_35' };
       if (n(candidate.holderMomentum) <= 0 && n(candidate.holderDeltaPct) <= 0) return { shouldSell: true, reason: 'momentum_lost' };
+      if (hoursHeld(position) >= 3) return { shouldSell: true, reason: 'max_hold_3h' };
       return { shouldSell: false };
     },
   },

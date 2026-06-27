@@ -6,7 +6,10 @@
   "scripts": {
     "sim": "ts-node src/simulator.ts",
     "watch": "ts-node src/watch.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "replay": "ts-node src/replay.ts",
+    "replay:reports": "ts-node src/replay-reports.ts",
+    "replay:rolling:reports": "ts-node src/replay-rolling-reports.ts"
   },
   "engines": {
     "node": ">=22"

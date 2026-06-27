@@ -40,6 +40,11 @@ export interface Candidate {
   priceChange1h?: number | null;
   volume1h?: number | null;
   volume24h?: number | null;
+  volume5m?: number | null;
+  volume15m?: number | null;
+  volume1hDelta?: number | null;
+  volume5mDelta?: number | null;
+  volume15mDelta?: number | null;
   marketPhase?: string | null;
   pnlTrustLevel?: string | null;
   dataHealthLevel?: string | null;
@@ -176,6 +181,8 @@ export interface PerformanceReport {
   realizedPnlSol: number;
   unrealizedPnlSol: number;
   totalEquitySol: number;
+  rawEquitySol: number;
+  realEquitySol: number;
   maxDrawdownPct: number;
   profitFactor: number | null;
   averageWinPct: number | null;
@@ -183,6 +190,12 @@ export interface PerformanceReport {
   averageHoldMinutes: number | null;
   bestTrade: Trade | null;
   worstTrade: Trade | null;
+  rawPnlSol: number;
+  realPnlSol: number;
+  fillablePnlSol: number;
+  fillableExitRate: number;
+  unfillableWinCount: number;
+  liquidityDrainExitCount: number;
   unfillableWins: number;
 }
 
@@ -244,6 +257,8 @@ export interface StrategyRuleResult {
   openPositions: number;
   closedTrades: number;
   totalEquitySol: number;
+  rawEquitySol: number;
+  realEquitySol: number;
   realizedPnlSol: number;
   unrealizedPnlSol: number;
   winRate: number;
@@ -258,9 +273,15 @@ export interface StrategyPerformanceEntry {
   closedTrades: number;
   tradeCount: number;
   totalEquitySol: number;
+  rawEquitySol: number;
+  realEquitySol: number;
   realizedPnlSol: number;
   unrealizedPnlSol: number;
   realisticPnlSol: number;
+  rawPnlSol: number;
+  realPnlSol: number;
+  fillablePnlSol: number;
+  fillableExitRate: number;
   winRate: number;
   maxDrawdown: number;
   profitFactor: number | null;
@@ -271,12 +292,15 @@ export interface StrategyPerformanceEntry {
   bestTrade: Trade | null;
   worstTrade: Trade | null;
   hit2xCount: number;
+  fillable2xCount: number;
   hit2xRate: number;
   avgTimeTo2xMinutes: number | null;
   oldRuleResult: StrategyRuleResult;
   newRuleResult: StrategyRuleResult;
   preventedEarlySellCount: number;
   cooldownBlockedBuyCount: number;
+  unfillableWinCount: number;
+  liquidityDrainExitCount: number;
   unfillableWins: number;
   fillableWinRate: number;
   rejectionSummary: Record<string, number>;
@@ -289,18 +313,61 @@ export interface StrategyPerformanceReport {
 
 export interface StrategyLeagueEntry {
   rank: number;
+  rawRank: number;
+  realRank: number;
+  rankDelta: number;
+  strategy: string;
   strategyName: string;
+  rawEquity: number;
+  realEquity: number;
+  rawEquitySol: number;
+  realEquitySol: number;
   totalEquitySol: number;
+  rawPnL: number;
+  realPnL: number;
   realisticPnlSol: number;
+  rawPnlSol: number;
+  realPnlSol: number;
+  fillablePnlSol: number;
   tradeCount: number;
   winRate: number;
+  fillableExitRate: number;
   profitFactor: number | null;
+  fillable2xCount: number;
+  unfillableWinCount: number;
+  liquidityDrainExitCount: number;
   unfillableWins: number;
 }
 
 export interface StrategyLeagueReport {
   updatedAt: string;
   strategies: StrategyLeagueEntry[];
+}
+
+export interface Top10BreakoutFocusEntry {
+  strategyName: string;
+  rawPnL: number;
+  fillablePnL: number;
+  realPnL: number;
+  unfillableWinCount: number;
+  liquidityDrainExitCount: number;
+  buyCount: number;
+  tradeCount: number;
+  hit2xCount: number;
+  avgTimeTo2xMinutes: number | null;
+  fillable2xCount: number;
+  suspiciousLiquidityDrainWinCount: number;
+}
+
+export interface Top10BreakoutReport {
+  updatedAt: string;
+  candidateCount: number;
+  actualBuyCount: number;
+  hit2xCount: number;
+  avgTimeTo2xMinutes: number | null;
+  fillable2xCount: number;
+  suspiciousLiquidityDrainWinCount: number;
+  focusedExits: Top10BreakoutFocusEntry[];
 }
 
 export interface AnalysisEntry {

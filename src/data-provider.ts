@@ -1,4 +1,4 @@
-﻿import fs from 'fs/promises';
+import fs from 'fs/promises';
 import path from 'path';
 import { Candidate, LastBuyerReport, SimulatorConfig } from './types';
 
@@ -35,7 +35,7 @@ function firstNumber(...values: unknown[]): number | null {
 function nestedNumber(value: unknown, key: string): number | null {
   return isRecord(value) ? toNumberOrNull(value[key]) : null;
 }
-function normalizeCandidate(value: unknown): Candidate | null {
+export function normalizeCandidate(value: unknown): Candidate | null {
   if (!isRecord(value)) return null;
   const symbol = typeof value.symbol === 'string' ? value.symbol : '';
   const address = typeof value.address === 'string'
@@ -72,12 +72,24 @@ function normalizeCandidate(value: unknown): Candidate | null {
     priceChange1h: firstNumber(value.priceChange1h, value.priceChange1hPct, value.change1h, nestedNumber(value.priceChange, '1h')),
     volume1h: firstNumber(value.volume1h, value.volume1hUsd, value.volumeUsd1h),
     volume24h: firstNumber(value.volume24h, value.volume24hUsd, value.volume, value.volumeUsd24h),
+    volume5m: firstNumber(value.volume5m, value.volume_5m, value.volume5mUsd, value.volume_5m_usd),
+    volume15m: firstNumber(value.volume15m, value.volume_15m, value.volume15mUsd, value.volume_15m_usd),
+    volume1hDelta: firstNumber(value.volume1hDelta, value.volume1hChange, value.volumeDelta1h),
+    volume5mDelta: firstNumber(value.volume5mDelta, value.volume5mChange, value.volumeDelta5m),
+    volume15mDelta: firstNumber(value.volume15mDelta, value.volume15mChange, value.volumeDelta15m),
     marketPhase: typeof value.marketPhase === 'string' ? value.marketPhase : null,
     pnlTrustLevel: isRecord(value.pnlTrust) && typeof value.pnlTrust.level === 'string' ? value.pnlTrust.level : null,
     dataHealthLevel: isRecord(value.dataHealth) && typeof value.dataHealth.level === 'string' ? value.dataHealth.level : null,
     devRiskScore: firstNumber(value.devRiskScore),
     devRiskLevel: typeof value.devRiskLevel === 'string' ? value.devRiskLevel : null,
     holderCount: firstNumber(value.holderCount, value.holders),
+    holderDeltaPct: firstNumber(value.holderDeltaPct, value.holderMomentum),
+    holderCountChange: firstNumber(value.holderCountChange, value.holderDelta),
+    liquidityUsdDeltaPct: firstNumber(value.liquidityUsdDeltaPct),
+    lpRetentionRate24h: firstNumber(value.lpRetentionRate24h),
+    top10HolderRateDelta: firstNumber(value.top10HolderRateDelta, value.top10HolderRateChange),
+    smartWalletFirstEntryCountChange: firstNumber(value.smartWalletFirstEntryCountChange, value.smartWalletEntryDelta),
+    smartWalletNetFlow1h: firstNumber(value.smartWalletNetFlow1h),
     bundlerRate: firstNumber(value.bundlerRate, value.bundler),
     sniperCount: firstNumber(value.sniperCount, value.sniper),
     smartWalletSignal: typeof value.smartWalletSignal === 'string' ? value.smartWalletSignal : null,
@@ -124,5 +136,17 @@ export async function loadReportCandidates(configPath = DEFAULT_CONFIG_PATH): Pr
     .map(normalizeCandidate)
     .filter((candidate): candidate is Candidate => candidate !== null);
 }
+export async function loadCandidatesFromReportPath(sourcePath: string): Promise<Candidate[]> {
+  const report = JSON.parse((await fs.readFile(sourcePath, 'utf8')).replace(/^\uFEFF/, '')) as LastBuyerReport;
+  const source = Array.isArray(report.allTokens) && report.allTokens.length > 0
+    ? report.allTokens
+    : Array.isArray(report.candidates) && report.candidates.length > 0
+      ? report.candidates
+      : Array.isArray(report.active)
+        ? report.active
+        : [];
 
-
+  return source
+    .map(normalizeCandidate)
+    .filter((candidate): candidate is Candidate => candidate !== null);
+}
