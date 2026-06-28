@@ -11,12 +11,12 @@ const INCLUDE_BASE_STRATEGIES = ['1', 'true', 'yes'].includes(
 );
 
 const ACTIVE_BASE_STRATEGIES = new Set(INCLUDE_RESEARCH_STRATEGIES
-  ? ['DEGEN', 'FOMO', 'TOP10_BREAKOUT']
-  : ['FOMO']);
+  ? ['DEGEN', 'FOMO', 'FOMO_STRICT', 'TOP10_BREAKOUT']
+  : ['FOMO', 'FOMO_STRICT']);
 
 const BUY_SIDE_EXPERIMENTS = new Set(INCLUDE_RESEARCH_STRATEGIES
-  ? ['DEGEN', 'FOMO', 'TOP10_BREAKOUT']
-  : ['FOMO']);
+  ? ['DEGEN', 'FOMO', 'FOMO_STRICT', 'TOP10_BREAKOUT']
+  : ['FOMO', 'FOMO_STRICT']);
 
 const ACTIVE_SELL_STRATEGIES = new Set(INCLUDE_RESEARCH_STRATEGIES
   ? sellStrategies.map((strategy) => strategy.name)
